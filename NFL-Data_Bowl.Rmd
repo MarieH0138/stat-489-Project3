@@ -1,5 +1,5 @@
 ---
-title: "NFL Big data bowl"
+title: "week 1, ignore me"
 author: "Marie Han"
 date: "`r Sys.Date()`"
 output: html_document
