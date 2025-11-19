@@ -90,5 +90,6 @@ first_instance
 first_play <- first_instance %>%
   filter(play_id == min(play_id))
 first_play
+s
 ```
 
