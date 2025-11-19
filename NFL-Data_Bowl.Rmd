@@ -1,0 +1,94 @@
+---
+title: "NFL Big data bowl"
+author: "Marie Han"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(modelr))
+suppressPackageStartupMessages(library(boot))
+suppressPackageStartupMessages(library(stringr))
+```
+
+```{r}
+
+input_2023_w01 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w01.csv")
+avg_speed_by_player <- function(data) {
+  data %>%
+    group_by(player_name) %>%
+    summarize(avg_speed = mean(s, na.rm = TRUE)) %>%
+    arrange(desc(avg_speed))
+}
+
+avg_speed_game <- function(data) {
+  data %>%
+    group_by(player_name,play_id, game_id) %>%
+    summarize(avg_speed = mean(s, na.rm = TRUE)) 
+}
+
+avg_speed_by_player(input_2023_w01)
+avg_speed_game(input_2023_w01)
+head(input_2023_w01)
+
+```
+
+
+```{r}
+input_2023_w02 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w02.csv")
+
+avg_speed_by_player(input_2023_w02)
+```
+```{r}
+input_2023_w03 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w03.csv")
+
+avg_speed_by_player(input_2023_w03)
+```
+```{r}
+input_2023_w04 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w04.csv")
+
+avg_speed_by_player(input_2023_w04)
+```
+
+```{r}
+input_2023_w05 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w05.csv")
+
+avg_speed_by_player(input_2023_w05)
+```
+
+```{r}
+input_2023_w18 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w18.csv")
+
+avg_speed_by_player(input_2023_w18)
+```
+
+
+
+
+
+#group each weeks games, find number of unique plays, how distinguish team 1 and 2? 
+```{r}
+unique_game <- function(data) {
+  data %>%
+    distinct(game_id, play_id) %>% 
+    count(game_id, name = "num_unique_plays")
+}
+
+unique_game(input_2023_w01)
+```
+
+```{r}
+first_instance <- input_2023_w01 %>%
+  arrange(game_id, play_id, frame_id) %>%   # ensure earliest
+  distinct(player_name, .keep_all = TRUE)
+
+first_instance
+
+first_play <- first_instance %>%
+  filter(play_id == min(play_id))
+first_play
+```
+
