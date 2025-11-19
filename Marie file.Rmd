@@ -3,3 +3,5 @@ title: "Marie file"
 output: html_document
 ---
 
+Predicting if QB "the team" tends to do some type of passing: deep, short, left or right. 
+And if they are successful or not
