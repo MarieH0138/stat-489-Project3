@@ -25,6 +25,8 @@ suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(modelr))
 suppressPackageStartupMessages(library(boot))
 suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(randomForestSRC))
+
 ```
 
 
@@ -66,8 +68,6 @@ get_game_by_index <- function(df, index) {
 game1 <- get_game_by_index(input_2023_w01, 1)
 
 
-library(dplyr)
-
 # df = full tracking dataset for ONE game (or multiple games)
 first_last <- game1 %>%
   group_by(game_id,play_id,nfl_id) %>%
@@ -96,8 +96,6 @@ first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
 Prediction timeeee
 
 ```{r}
-library(randomForest)
-
 A<- cbind(first_last$x_last,first_last$y_last)
 
 model1 <- lm(
@@ -107,5 +105,10 @@ model1 <- lm(
 summary(model1)
 ```
 
+```{r}
+
+model <- rfsrc(Multivar(x_last, y_last) ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos, 
+               data = first_last_clean)
+```
 
 
