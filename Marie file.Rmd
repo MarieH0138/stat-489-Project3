@@ -39,3 +39,15 @@ model <- glm*/lm*(Final_position~starting_coordinates+initial_speed+initial_head
 
 logistic_cv2 <- cv.glm(train, model, cost, K=5)
 logistic_cv2$delta
+
+
+To get to this point I need to:
+-decide what variables to use
+-how to code those variables
+-clean the data to remove the stupid variables HAH
+-more cleaning. boo. 
+- data exploration
+-decide on a model that looks noice
+-graphical representations
+-see what the homies think about it 
+-make it work. sigh
