@@ -51,3 +51,61 @@ To get to this point I need to:
 -graphical representations
 -see what the homies think about it 
 -make it work. sigh
+
+
+DECIDING ON VARIABLES
+```{r}
+input_2023_w01 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w01.csv")
+
+#splitting by gameid
+get_game_by_index <- function(df, index) {
+  games <- df %>% group_split(game_id)
+  return(games[[index]])
+}
+
+game1 <- get_game_by_index(input_2023_w01, 1)
+
+
+library(dplyr)
+
+# df = full tracking dataset for ONE game (or multiple games)
+first_last <- game1 %>%
+  group_by(game_id,play_id,nfl_id) %>%
+  
+# Identify the first & last rows for each player in each play
+  summarize(
+    # First frame
+    x_1   = x[which.min(frame_id)],
+    y_1   = y[which.min(frame_id)],
+    s_1   = s[which.min(frame_id)],
+    a_1   = a[which.min(frame_id)],
+    dir_1 = dir[which.min(frame_id)],
+    pos   = first(player_position),
+    
+    # Last frame
+    x_last = x[which.max(frame_id)],
+    y_last = y[which.max(frame_id)],
+    
+    .groups = "drop"
+  )
+
+first_last_clean <- first_last %>% drop_na(x_last, y_last) 
+first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
+```
+
+Prediction timeeee
+
+```{r}
+library(randomForest)
+
+A<- cbind(first_last$x_last,first_last$y_last)
+
+model1 <- lm(
+  A ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos,
+  data = first_last_clean
+)
+summary(model1)
+```
+
+
+
