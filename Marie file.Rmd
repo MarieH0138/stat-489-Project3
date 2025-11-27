@@ -68,7 +68,7 @@ get_game_by_index <- function(df, index) {
 game1 <- get_game_by_index(input_2023_w01, 1)
 
 
-# df = full tracking dataset for ONE game (or multiple games)
+# game1 = full tracking dataset for ONE game (want to make into reusable function that loops through each input file)
 first_last <- game1 %>%
   group_by(game_id,play_id,nfl_id) %>%
   
@@ -89,15 +89,16 @@ first_last <- game1 %>%
     .groups = "drop"
   )
 
-first_last_clean <- first_last %>% drop_na(x_last, y_last) 
-first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
+
 ```
 
 Prediction timeeee
 
 ```{r}
+#force it to predict both x and y coordinate at the same time 
 A<- cbind(first_last$x_last,first_last$y_last)
 
+#simplest model possible
 model1 <- lm(
   A ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos,
   data = first_last_clean
@@ -107,7 +108,12 @@ summary(model1)
 
 ```{r}
 
-model <- rfsrc(Multivar(x_last, y_last) ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos, 
+#random tree hates missing values + character type so...
+first_last_clean <- first_last %>% drop_na(x_last, y_last) 
+first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
+
+#this makes my R session just bug out and kick me out rip, I'm very sure I'm doing something wrong. But i wanna use ittttt
+model2 <- rfsrc(Multivar(x_last, y_last) ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos, 
                data = first_last_clean)
 ```
 
