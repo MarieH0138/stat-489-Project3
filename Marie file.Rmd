@@ -3,5 +3,39 @@ title: "Marie file"
 output: html_document
 ---
 
+```{r setup, include = FALSE}
+# DO NOT ALTER THIS CHUNK
+knitr::opts_chunk$set(
+  echo = TRUE,
+  eval = TRUE,
+  fig.width = 5,
+  fig.asp = 0.618,
+  out.width = "70%",
+  dpi = 120,
+  fig.align = "center",
+  cache = FALSE
+)
+# Cost function for cross validation #NEED TO MAKE OUR OWN
+cost <- function(obs, pred) {
+  outcome <- pred > 0.5
+  return(1 - (sum(obs == outcome) / length(obs)))
+}
+# Load required packages
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(modelr))
+suppressPackageStartupMessages(library(boot))
+suppressPackageStartupMessages(library(stringr))
+```
+
+
 Predicting if QB "the team" tends to do some type of passing: deep, short, left or right. 
 And if they are successful or not
+
+Idea -> prediction model looking something like: 
+
+
+model <- glm*/lm*(Final_position~starting_coordinates+initial_speed+initial_heading+position , data = train, family = "poisson")
+
+
+logistic_cv2 <- cv.glm(train, model, cost, K=5)
+logistic_cv2$delta
