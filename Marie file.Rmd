@@ -142,10 +142,10 @@ model1_preds <- first_last_clean %>%
   add_predictions(model1, type ="response")  %>%
 
 
+#want to collapse the double matrix of prediction into one column or something, thinking thinking ... not working atm
+test <- model1_preds %>%
+  mutate(prediction = lapply(pred, as.numeric)) %>%
+  unnest_wider(prediction, names_sep = "_")
 
- #add_predictions(model1, type = "response") %>%
- # mutate(
-  #  outcome = if_else(pred > 0.5, 1, 0)
-   # )
 ```
 
