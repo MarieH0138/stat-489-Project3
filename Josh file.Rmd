@@ -61,4 +61,11 @@ nfl_analytics_clean <- nfl_analytics %>%
   )
 ```
 
-f
+```{r}
+probs_by_team_down <- nfl_analytics_clean %>%
+  group_by(possession_team, down, pass_outcome) %>%
+  summarise(n = n(), .groups = "drop_last") %>%
+  mutate(total_by_team_down = sum(n),
+         prob = n / total_by_team_down) %>%
+  ungroup()
+```
