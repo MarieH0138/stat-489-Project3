@@ -39,6 +39,7 @@ head(input_2023_w01)
 
 ```{r}
 input_2023_w02 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w02.csv")
+supplementary_data <- read.csv()
 
 avg_speed_by_player(input_2023_w02)
 ```

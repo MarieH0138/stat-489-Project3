@@ -92,7 +92,7 @@ first_last <- game1 %>%
 
 ```
 
-Prediction timeeee
+Prediction timeeee haha jk, making model time
 
 ```{r}
 #force it to predict both x and y coordinate at the same time 
@@ -117,4 +117,10 @@ model2 <- rfsrc(Multivar(x_last, y_last) ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos,
                data = first_last_clean)
 ```
 
+
+
+Prediction time FOR REALLLLLL
+```{r}
+
+```
 
