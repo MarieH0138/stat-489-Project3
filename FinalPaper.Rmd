@@ -1,5 +1,21 @@
 ---
-title: "FinalPaper"
+title: "Stat489 proj3"
+author: Josh, Lydia, Brienne, Marie
 output: html_document
 ---
 
+Each section should be ~200 words, will easily hit 1000 as a group.
+
+Introduction
+
+
+Methods
+
+
+Results/Inferences
+
+
+Limitations
+
+
+Conclusion
