@@ -180,7 +180,7 @@ clutch_passes <- nfl_analytics_clean %>%
   filter(down == 4)
 
 model <- glm(complete ~ yards_to_go + pass_length + pass_location_type +
-    play_action + defenders_in_the_box + dropback_distance + team_coverage_man_zone + possession_team,
+    play_action + defenders_in_the_box + week + offense_formation + team_coverage_man_zone, 
   data = clutch_passes,
   family = binomial
 )
