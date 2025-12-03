@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 library(dplyr)
 library(stringr)
 library(nnet)
@@ -24,3 +25,4 @@ supplementary_data$pass_result= factor(supplementary_data$pass_result)
 #actual statistics now, multinominal log regression
 multi_model= multinom(pass_result ~ depth + direction + possession_team, data = supplementary_data)
 summary(multi_model)
+
