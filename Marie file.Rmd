@@ -30,6 +30,25 @@ suppressPackageStartupMessages(library(randomForestSRC))
 ```
 
 
+FUNCTIONS
+```{r}
+
+
+load_and_bind <- function(folder_path) { 
+  files <- list.files(folder_path, pattern = "\\csv?$", full.names=TRUE)
+  files %>%
+    lapply(read.csv) %>%
+    bind_rows()
+}
+
+#splitting by gameid
+get_game_by_index <- function(df, index) {
+  games <- df %>% group_split(game_id)
+  return(games[[index]])
+}
+
+```
+
 Predicting if QB "the team" tends to do some type of passing: deep, short, left or right. 
 And if they are successful or not
 
@@ -59,17 +78,15 @@ DECIDING ON VARIABLES
 ```{r}
 input_2023_w01 <- read.csv("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train/input_2023_w01.csv")
 
-#splitting by gameid
-get_game_by_index <- function(df, index) {
-  games <- df %>% group_split(game_id)
-  return(games[[index]])
-}
+
 
 game1 <- get_game_by_index(input_2023_w01, 1)
 
 
 # game1 = full tracking dataset for ONE game (want to make into reusable function that loops through each input file)
-first_last <- game1 %>%
+ALL_GAMES <- load_and_bind("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/train")
+
+first_last <- ALL_GAMES %>%
   group_by(game_id,play_id,nfl_id) %>%
   
 # Identify the first & last rows for each player in each play
@@ -92,7 +109,7 @@ first_last <- game1 %>%
 
 ```
 
-Prediction timeeee haha jk, making model time
+making model time
 
 ```{r}
 first_last_clean <- first_last %>% drop_na(x_last, y_last) 
@@ -109,36 +126,18 @@ model1 <- lm(
 summary(model1)
 ```
 
-```{r, include =FALSE, eval=FALSE}
-
-#random tree hates missing values + character type so...
-first_last_clean <- first_last %>% drop_na(x_last, y_last) 
-first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
-
-#this makes my R session just bug out and kick me out rip, I'm very sure I'm doing something wrong. But i wanna use ittttt
-model2 <- rfsrc(Multivar(x_last, y_last) ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos, 
-               data = first_last_clean)
-```
 
 
 
-Prediction time FOR REALLLLLL
+
+Prediction time 
 ```{r}
 #training data from output files in train folder
 #stitching them together into one BIG file
 
-library(readxl)
+#BIG_OUTPUT <- load_and_bind("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/Output_data")
 
-load_and_bind <- function(folder_path) { 
-  files <- list.files(folder_path, pattern = "\\csv?$", full.names=TRUE)
-  files %>%
-    lapply(read.csv) %>%
-    bind_rows()
-}
-
-BIG_OUTPUT <- load_and_bind("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/Output_data")
-
-model1_preds <- first_last_clean %>% 
+model1_preds <- first_last_clean %>%
   add_predictions(model1, type ="response")   %>%
   mutate(
     pred_x = pred[, 1],
@@ -146,15 +145,39 @@ model1_preds <- first_last_clean %>%
   )
 
 model1_preds_error <- model1_preds %>%
-  mutate(error = sqrt((pred_x - x_last)^2 + (pred_y - y_last)^2),
-    accurate = error < 5
-           )
+  mutate(
+    accurate = abs(pred_x - x_last) <= 3 &
+               abs(pred_y - y_last) <= 3 )
 
 
-#want to collapse the double matrix of prediction into one column or something, thinking thinking ... not working atm
-#test <- model1_preds %>%
- # mutate(prediction = lapply(pred, as.numeric)) %>%
-  #unnest_wider(prediction, names_sep = "_")
+#maybe load test file
 
+
+```
+
+
+
+```{r}
+set.seed(1234567)
+sample100 <- model1_preds_error %>%
+  slice_sample(n = 100)
+
+
+ggplot(sample100) +
+  geom_segment(aes(
+    x = x_last, y = y_last,
+    xend = pred_x, yend = pred_y
+  ),
+  arrow = arrow(length = unit(0.15, "cm")),
+  alpha = 0.5
+  ) +
+  geom_point(aes(x_last, y_last), color = "purple", size = 2) +
+  geom_point(aes(pred_x, pred_y), color = "black", size = 2) +
+  labs(
+    title = "Actual → Predicted Position Arrows",
+    x = "X",
+    y = "Y"
+  ) +
+  theme_minimal()
 ```
 
