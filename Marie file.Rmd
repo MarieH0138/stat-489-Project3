@@ -139,13 +139,22 @@ load_and_bind <- function(folder_path) {
 BIG_OUTPUT <- load_and_bind("C:/Users/marie/Downloads/nfl-big-data-bowl-2026-prediction/Output_data")
 
 model1_preds <- first_last_clean %>% 
-  add_predictions(model1, type ="response")  %>%
+  add_predictions(model1, type ="response")   %>%
+  mutate(
+    pred_x = pred[, 1],
+    pred_y = pred[, 2]
+  )
+
+model1_preds_error <- model1_preds %>%
+  mutate(error = sqrt((pred_x - x_last)^2 + (pred_y - y_last)^2),
+    accurate = error < 5
+           )
 
 
 #want to collapse the double matrix of prediction into one column or something, thinking thinking ... not working atm
-test <- model1_preds %>%
-  mutate(prediction = lapply(pred, as.numeric)) %>%
-  unnest_wider(prediction, names_sep = "_")
+#test <- model1_preds %>%
+ # mutate(prediction = lapply(pred, as.numeric)) %>%
+  #unnest_wider(prediction, names_sep = "_")
 
 ```
 
