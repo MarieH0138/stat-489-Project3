@@ -112,11 +112,8 @@ first_last <- ALL_GAMES %>%
 making model time
 
 ```{r}
-first_last_clean <- first_last %>% drop_na(x_last, y_last) 
-first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
-
 #force it to predict both x and y coordinate at the same time 
-A<- cbind(first_last_clean$x_last,first_last_clean$y_last)
+A<- cbind(first_last$x_last,first_last$y_last)
 
 #simplest model possible
 model1 <- lm(
@@ -126,6 +123,19 @@ model1 <- lm(
 summary(model1)
 ```
 
+<<<<<<< HEAD
+=======
+```{r}
+
+#random tree hates missing values + character type so...
+first_last_clean <- first_last %>% drop_na(x_last, y_last) 
+first_last_clean <- first_last_clean %>% mutate(pos = as.factor(pos))
+
+#this makes my R session just bug out and kick me out rip, I'm very sure I'm doing something wrong. But i wanna use ittttt
+model2 <- rfsrc(Multivar(x_last, y_last) ~ x_1 + y_1 + s_1 + a_1 + dir_1 + pos, 
+               data = first_last_clean)
+```
+>>>>>>> d5d5ef4a06bb82c42ced5c8ad509135e0fadead0
 
 
 
@@ -151,7 +161,6 @@ model1_preds_error <- model1_preds %>%
 
 
 #maybe load test file
-
 
 ```
 
