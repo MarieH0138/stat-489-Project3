@@ -1,0 +1,188 @@
+---
+title: "Josh file, ignore me as well"
+output: html_document
+---
+```{r Data Download}
+nfl_analytics <- read.csv("/Users/joshkornell/Downloads/supplementary_data.csv")
+
+library(dplyr)
+library(stringr)
+library(forcats)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r Pass Patterns}
+depth_patterns <- list(
+  short = regex("\\b(short pass|short to|screen to|screen pass|dump off|checkdown|swing pass|swing to|swing left|swing right|swing)\\b", ignore_case = TRUE),
+  deep  = regex("\\b(deep pass|deep to|deep left|deep right|bomb to|bomb|long pass|go route|deep middle|deep center)\\b", ignore_case = TRUE)
+)
+
+left_pat   <- regex("\\b(left|toward left|to the left|left side)\\b", ignore_case = TRUE)
+right_pat  <- regex("\\b(right|toward right|to the right|right side)\\b", ignore_case = TRUE)
+middle_pat <- regex("\\b(middle|center|centre|up the middle|middle of the field|inside)\\b", ignore_case = TRUE)
+```
+
+```{r Adding directional variables}
+#Clean Data
+nfl_analytics_clean <- nfl_analytics %>%
+  filter(!is.na(pass_result),
+         play_nullified_by_penalty == "N") %>%
+  mutate(
+    sd = coalesce(play_description, "") %>% str_squish(),
+
+    # direction
+    pass_dir = case_when(
+      str_detect(sd, left_pat)   ~ "left",
+      str_detect(sd, right_pat)  ~ "right",
+      str_detect(sd, middle_pat) ~ "middle",
+      TRUE                       ~ "unknown"
+    ),
+
+    # depth
+    pass_depth = case_when(
+      str_detect(sd, depth_patterns$short) ~ "short",
+      str_detect(sd, depth_patterns$deep)  ~ "deep",
+      # heuristics: if pass_length exists and numeric -> use pass_length breakpoint
+      !is.na(pass_length) & pass_length <= 7    ~ "short",
+      !is.na(pass_length) & pass_length >= 16   ~ "deep",
+      !is.na(pass_length) & pass_length > 7 & pass_length < 16 ~ "medium",
+      TRUE ~ "unknown"
+    ),
+
+    # combined tag
+    pass_outcome = str_c(pass_depth, pass_dir, sep = "_") # e.g. "short_left"
+  ) %>%
+  # keep only meaningful outcomes 
+  mutate(
+    pass_depth = factor(pass_depth, levels = c("short","medium","deep","unknown")),
+    pass_dir   = factor(pass_dir,   levels = c("left","middle","right","unknown")),
+    pass_outcome = factor(pass_outcome)
+  )
+```
+
+```{r probability of team by down}
+probs_by_team_down <- nfl_analytics_clean %>%
+  group_by(possession_team, down, pass_outcome) %>%
+  summarise(n = n(), .groups = "drop_last") %>%
+  mutate(total_by_team_down = sum(n),
+         prob = n / total_by_team_down) %>%
+  ungroup()
+```
+
+```{r prob table by team and down}
+# returns a tidy data.frame of probs for team/down (with smoothing option)
+team_down_table <- function(team_abbr, down_num, smoothing = TRUE, alpha = 1) {
+  data <- nfl_analytics_clean %>%
+    filter(possession_team == team_abbr, down == down_num)
+
+  counts <- data %>%
+    count(pass_outcome) %>%
+    complete(pass_outcome, fill = list(n = 0))
+
+  if(!smoothing) {
+    counts %>% mutate(prob = n / sum(n))
+  } else {
+    k <- nrow(counts)
+    counts %>% mutate(prob = (n + alpha) / (sum(n) + alpha * k))
+  }
+}
+```
+
+```{r}
+team_down_table("WAS", 3)
+```
+
+```{r modeling}
+library(nnet)
+
+# keeping only common outcomes 
+top_outcomes <- nfl_analytics_clean %>%
+  count(pass_outcome) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 10) %>%  
+  pull(pass_outcome)
+
+train_df <- nfl_analytics_clean %>%
+  filter(pass_outcome %in% top_outcomes) %>%
+  mutate(pass_outcome = droplevels(pass_outcome)) %>%
+  # select features you want (down, yards_to_go, score diff, quarter, play_action, formation, etc.)
+  mutate(score_diff = pre_snap_home_score - pre_snap_visitor_score,
+         is_home = (possession_team == home_team_abbr)) %>%
+  select(pass_outcome, possession_team, down, yards_to_go, quarter, score_diff, play_action, offense_formation, receiver_alignment, defenders_in_the_box)
+
+# simplify categorical fields
+train_df$offense_formation <- fct_lump(train_df$offense_formation, 10)
+
+multinom_fit <- multinom(pass_outcome ~ possession_team + down + yards_to_go + quarter + score_diff + play_action + offense_formation, data = train_df)
+
+# predict probabilities for a new observation
+new_obs <- train_df %>% slice(1) %>% select(-pass_outcome)   # example
+predict(multinom_fit, newdata = new_obs, type = "probs")
+
+```
+
+```{r probs data frame}
+probs <- c(
+  deep_left = 0.06811775,
+  deep_middle = 0.05575349,
+  deep_right = 0.04852694,
+  medium_left = 0.06212166,
+  medium_middle = 0.14485961,
+  medium_right = 0.07785166,
+  short_left = 0.17063579,
+  short_middle = 0.20255508,
+  short_right = 0.16957801
+)
+
+probs_df <- data.frame(
+  category = names(probs),
+  probability = as.numeric(probs)
+)
+
+# Split category into depth + direction
+library(tidyr)
+probs_df <- probs_df |>
+  separate(category, into = c("depth", "direction"), sep = "_")
+```
+
+#GRAPH TIME
+
+```{r heatmap of pass prob}
+ggplot(probs_df, aes(direction, depth, fill = probability)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "green3") +
+  labs(
+    title = "Heatmap of Pass Probability",
+    x = "Direction",
+    y = "Depth"
+  ) +
+  theme_minimal()
+
+```
+
+```{r bar graph by team down}
+ggplot(probs_by_team_down, aes(x = factor(down), y = prob, fill = pass_outcome)) +
+  geom_col() +
+  theme_minimal() +
+  labs(
+    title = "Pass-Type Probability by Down",
+    x = "Down",
+    y = "Probability"
+  )
+```
+#Linear Regression (4th down)
+
+```{r}
+nfl_analytics_clean$complete <- ifelse(nfl_analytics_clean$pass_result == "C", 1, 0)
+
+clutch_passes <- nfl_analytics_clean %>%
+  filter(down == 4)
+
+model <- glm(complete ~ yards_to_go + pass_length + pass_location_type +
+    play_action + defenders_in_the_box + week + offense_formation + team_coverage_man_zone, 
+  data = clutch_passes,
+  family = binomial
+)
+summary(model)
+```
