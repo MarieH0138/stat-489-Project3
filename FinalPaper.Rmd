@@ -7,9 +7,25 @@ output: html_document
 Each section should be ~200 words, will easily hit 1000 as a group.
 
 Introduction
+The National Football League (NFL) generates a massive amount of data during each game, ranging from player movements and play outcomes to environmental conditions and game context. This data provides a unique opportunity to uncover insights that can inform team strategy, player performance, and game predictions. The NFL Big Data Bowl is an annual competition that challenges participants to analyze this rich dataset and apply advanced analytics, including statistical modeling and machine learning, to answer questions relevant to the sport.
+
+In this project, our group aims to leverage the NFL tracking data to [predict/analyze] [specific target, e.g., pass completion likelihood, player performance, play success, etc.]. By exploring patterns in player movements, game situations, and historical outcomes, we hope to identify key factors that influence [the target outcome] and develop a predictive framework that can support coaching decisions and enhance understanding of game dynamics. Through this analysis, we demonstrate how data-driven insights can provide a competitive advantage in professional football.
 
 
 Methods
+
+Our analysis leveraged the NFL Big Data Bowl tracking and play-by-play datasets to examine passing patterns, predict pass outcomes, and estimate player movement on the field. The dataset was first cleaned to remove plays with missing or invalid values, including nullified plays, and to standardize variable formats.
+
+Pass Outcome Analysis:
+For passing analysis, play descriptions were parsed to categorize passes by depth (short, medium, deep) and direction (left, middle, right). Depth was determined through a combination of keyword matching in play descriptions and numeric thresholds on pass length, while direction was identified using regular expressions for field orientation. These two dimensions were combined into a single categorical variable, pass_outcome, representing the type of pass (e.g., "short_left"). Empirical probabilities of different pass types were calculated for each team and down, with smoothing applied to handle rare outcomes. Multinomial logistic regression was used to model pass_outcome based on game situation and play-level features, including down, yards to go, quarter, score differential, play action, and offensive formation. Additionally, binary logistic regression was applied to fourth-down plays to predict pass completion, incorporating variables such as pass location, defenders in the box, offensive formation, and coverage type. Visualizations, including heatmaps and bar charts, illustrated passing tendencies and probability distributions across teams and downs.
+
+Player Movement Prediction:
+For movement prediction, tracking data for each player were summarized by identifying initial and final positions, speed, acceleration, and heading during each play. The first and last frames of each player within a play were used to create a dataset of features for modeling. Linear regression models were then applied to predict final player coordinates based on initial position, speed, acceleration, direction, and player position type. Model predictions were evaluated for accuracy by comparing predicted positions to observed outcomes, with graphical representations, such as vector plots, illustrating the correspondence between predicted and actual player locations. Cross-validation was employed to assess model performance and ensure robustness.
+
+Together, these analyses provided complementary insights: pass outcome modeling captured strategic decisions and tendencies at the team level, while player movement prediction captured the individual-level dynamics underlying those plays. Combining these approaches allowed us to link team-level passing behavior with the on-field positions and movements of players, creating a more holistic view of game dynamics.
+
+All data cleaning, feature engineering, visualization, and modeling were performed in R using packages including dplyr, tidyr, ggplot2, stringr, forcats, modelr, nnet, and randomForestSRC.
+
 
 
 Results/Inferences
