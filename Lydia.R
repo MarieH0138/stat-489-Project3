@@ -26,3 +26,9 @@ supplementary_data$pass_result= factor(supplementary_data$pass_result)
 multi_model= multinom(pass_result ~ depth + direction + possession_team, data = supplementary_data)
 summary(multi_model)
 
+z= summary(multi_model)$coefficients / summary(multi_model)$standard.errors
+p= 2 * (1 - pnorm(abs(z)))
+p
+
+pred= predict(multi_model, type = "probs")
+head(pred)
